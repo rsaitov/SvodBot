@@ -1,7 +1,6 @@
-using SvodBot.Interfaces;
 using SvodBot.Models;
 
-namespace SvodBot;
+namespace SvodBot.Executor;
 
 public class BatExecutor : IExecutor
 {

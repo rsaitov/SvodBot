@@ -1,4 +1,4 @@
-namespace SvodBot.Interfaces;
+namespace SvodBot.Bot;
 
 public interface IBot
 {

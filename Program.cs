@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Model;
-using SvodBot;
-using SvodBot.Interfaces;
+using SvodBot.Bot;
+using SvodBot.Executor;
 using SvodBot.Models;
 
 var builder = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false);
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile("appsettings.Development.json", optional: true);
 
 IConfiguration config = builder.Build();
 

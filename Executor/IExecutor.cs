@@ -1,4 +1,4 @@
-namespace SvodBot.Interfaces;
+namespace SvodBot.Executor;
 
 public interface IExecutor
 {
