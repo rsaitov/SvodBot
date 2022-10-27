@@ -5,3 +5,8 @@ On incoming messages starts application with parameter from received message.
 
 Links:
 https://github.com/TelegramBots/Telegram.Bot
+
+Improvements:
+1. Dependency Injection
+2. Logging
+3. Starting as service
