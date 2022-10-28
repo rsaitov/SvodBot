@@ -12,13 +12,17 @@ namespace SvodBot.Bot;
 public class TelegramBot : IBot
 {
     private readonly TelegramBotClient _client;
+    private readonly TelegramConfiguration _telegramConfiguration;
     private readonly IExecutor _executor;
-    private readonly Regex regexCommands = new Regex(@"before(\w)day");
+    private readonly Regex regexBeforeCommands = new Regex(@"before(\w+)");
+    private readonly Regex regexMultipleCommands = new Regex(@"multiple(\w+)");
+    private readonly Regex regexMonthCommands = new Regex(@"month(\w+)");
 
     public TelegramBot(
         TelegramConfiguration telegramConfiguration,
         IExecutor executor)
     {
+        _telegramConfiguration = telegramConfiguration;
         _client = new TelegramBotClient(telegramConfiguration.Token);
         _executor = executor;
     }
@@ -57,18 +61,23 @@ public class TelegramBot : IBot
 
         var chatId = message.Chat.Id;
 
-        if (DateTime.TryParse(messageText, out _) || regexCommands.IsMatch(messageText))
+        Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
+            
+        if (regexBeforeCommands.IsMatch(messageText))
         {
-            Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
-
-            if (regexCommands.IsMatch(messageText))
-            {
-                await HandleMenuCommand(botClient, messageText, chatId, cancellationToken);
-            }
-            else
-            {
-                await HandleDateMessage(botClient, messageText, chatId, cancellationToken);
-            }
+            await HandleMenuBeforeCommand(botClient, messageText, chatId, cancellationToken);
+        }
+        else if (regexMultipleCommands.IsMatch(messageText))
+        {
+            await HandleMenuMultipleCommand(botClient, messageText, chatId, cancellationToken);
+        }
+        else if (regexMonthCommands.IsMatch(messageText))
+        {
+            await HandleMenuMonthCommand(botClient, messageText, chatId, cancellationToken);
+        }
+        else if (DateTime.TryParse(messageText, out _))
+        {
+            await HandleDateMessage(botClient, messageText, chatId, cancellationToken);
         }
         else
         {
@@ -76,13 +85,13 @@ public class TelegramBot : IBot
         }
     }
 
-    private async Task HandleMenuCommand(
+    private async Task HandleMenuBeforeCommand(
         ITelegramBotClient botClient,
         string messageText,
         long chatId,
         CancellationToken cancellationToken)
     {
-        var match = regexCommands.Match(messageText);
+        var match = regexBeforeCommands.Match(messageText);
         if (!Int32.TryParse(match.Groups[1].Value, out var daysBefore))
             return;
         var dateFromDaysBefore = DateTime.Now.Date.AddDays(-daysBefore);
@@ -93,6 +102,73 @@ public class TelegramBot : IBot
         var sentMessage = await botClient.SendTextMessageAsync(
             chatId: chatId,
             text: $"Command received:\n{messageText}\nDate report: {dateFromDaysBeforeString}",
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task HandleMenuMultipleCommand(
+        ITelegramBotClient botClient,
+        string messageText,
+        long chatId,
+        CancellationToken cancellationToken)
+    {
+        var match = regexMultipleCommands.Match(messageText);
+        if (!Int32.TryParse(match.Groups[1].Value, out var numberOfFiles))
+            return;
+        var dateStart = DateTime.Now.Date.AddDays(-numberOfFiles);
+        var dateEnd = DateTime.Now.Date.AddDays(-1);
+
+        await botClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: @$"Command received: {messageText}
+Multiple files: {numberOfFiles}
+Dates report: {dateStart.ToShortDateString()} - {dateEnd.ToShortDateString()}",
+            cancellationToken: cancellationToken);
+
+        for (var date = dateStart; date <= dateEnd; date = date.AddDays(1))
+        {
+            await _executor.StartExeAsync(date.ToShortDateString());
+            await Task.Delay(_telegramConfiguration.TimeoutBetweenMultipleExecutionsInSeconds * 1000);
+        }
+
+        await botClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: $"Execution finished:\n{messageText}",
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task HandleMenuMonthCommand(
+        ITelegramBotClient botClient,
+        string messageText,
+        long chatId,
+        CancellationToken cancellationToken)
+    {
+        var match = regexMonthCommands.Match(messageText);
+        if (!Int32.TryParse(match.Groups[1].Value, out var monthNumber))
+            return;
+        var currentDate = DateTime.Now.Date.AddMonths(-monthNumber);
+
+        var dateStart = new DateTime(currentDate.Year, currentDate.Month, 1);
+        var dateEnd = dateStart.AddMonths(1).AddDays(-1);
+
+        if (dateEnd.Date > DateTime.Now.Date)
+            dateEnd = DateTime.Now.Date;
+
+        await botClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: @$"Command received: {messageText}
+Whole month with back month offset: {monthNumber}
+Dates report: {dateStart.ToShortDateString()} - {dateEnd.ToShortDateString()}",
+            cancellationToken: cancellationToken);
+
+        for (var date = dateStart; date <= dateEnd; date = date.AddDays(1))
+        {
+            await _executor.StartExeAsync(date.ToShortDateString());
+            await Task.Delay(_telegramConfiguration.TimeoutBetweenMultipleExecutionsInSeconds * 1000);
+        }
+
+        await botClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: $"Execution finished:\n{messageText}",
             cancellationToken: cancellationToken);
     }
 
@@ -111,9 +187,9 @@ public class TelegramBot : IBot
     }
 
     private static async Task HandleMessageError(
-        ITelegramBotClient botClient, 
-        string messageText, 
-        long chatId, 
+        ITelegramBotClient botClient,
+        string messageText,
+        long chatId,
         CancellationToken cancellationToken
         )
     {
