@@ -8,9 +8,10 @@ https://github.com/TelegramBots/Telegram.Bot
 
 Fixed improvements:
 1. Hotkeys (telegram menu) -  yesterday, X days before
+2. Hotkeys (telegram menu) - multiple files
 
 Improvements:
 1. Dependency Injection
 2. Logging
 3. Starting as service
-4. Hotkeys (telegram menu) - multiple files
+4. Convert executor handlers to interface 
