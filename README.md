@@ -12,7 +12,7 @@ https://github.com/TelegramBots/Telegram.Bot
 3. Hotkeys (telegram menu) - whole month with offset (multiple files)
 
 ## Further improvements:
-1. Dependency Injection
+1. Dependency Injection **in progress**
 2. Logging
 3. Starting as service
 4. Convert executor handlers to interface 
