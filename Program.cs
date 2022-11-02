@@ -1,32 +1,46 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using SvodBot;
 using SvodBot.Bot;
 using SvodBot.Executor;
 using SvodBot.Models;
 
-var services = new ServiceCollection();
-ConfigureServices(services);
+// Host Based Console App
+// https://thecodeblogger.com/2021/05/11/how-to-enable-logging-in-net-console-applications/
 
-var diContainer = services.BuildServiceProvider().GetService<DiContainer>();
-await diContainer.ExecuteAsync();
-
-void ConfigureServices(ServiceCollection services)
+var host = Host.CreateDefaultBuilder(args)
+.ConfigureAppConfiguration(config =>
 {
-    var builder = new ConfigurationBuilder()
-        .SetBasePath(Directory.GetCurrentDirectory())
-        .AddJsonFile("appsettings.json", optional: false)
-        .AddJsonFile("appsettings.Development.json", optional: true);
+    config.AddJsonFile("appsettings.json", optional: false);
+    config.AddJsonFile("appsettings.Development.json", optional: true);
+})
+.ConfigureServices((context, services) =>
+{
+    ConfigureCustomServices(services, context.Configuration);
+})
+.ConfigureLogging((_, logging) =>
+{
+    logging.ClearProviders();
+    logging.AddSimpleConsole(options => options.IncludeScopes = true);
+})
+.Build();
 
-    IConfiguration config = builder.Build();
+var workerInstance = host.Services.GetRequiredService<DiContainer>();
+await workerInstance.ExecuteAsync();
+
+static void ConfigureCustomServices(IServiceCollection services, IConfiguration config)
+{
     var telegramConfiguration = config
         .GetSection("TelegramConfiguration")
         .Get<TelegramConfiguration>();
     var executorConfiguration = config
         .GetSection("ExecutorConfiguration")
         .Get<ExecutorConfiguration>();
-        
+
     services
+        .AddTransient<DiContainer>()
         .AddSingleton(telegramConfiguration)
         .AddSingleton(executorConfiguration)
         .AddSingleton<IExecutor, BatExecutor>()
