@@ -13,6 +13,6 @@ https://github.com/TelegramBots/Telegram.Bot
 4. Dependency Injection (using https://siderite.dev/blog/creating-console-app-with-dependency-injection-in-/#at3793184247)
 
 ## Further improvements:
-1. Logging
+1. Logging **in progress**
 2. Starting as service
 3. Convert executor handlers to interface 
