@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using SvodBot.Executor;
 using SvodBot.Models;
 using Telegram.Bot;
@@ -14,21 +15,28 @@ public class TelegramBot : IBot
     private readonly TelegramBotClient _client;
     private readonly TelegramConfiguration _telegramConfiguration;
     private readonly IExecutor _executor;
+    private readonly ILogger<TelegramBot> _logger;
     private readonly Regex regexBeforeCommands = new Regex(@"before(\w+)");
     private readonly Regex regexMultipleCommands = new Regex(@"multiple(\w+)");
     private readonly Regex regexMonthCommands = new Regex(@"month(\w+)");
 
     public TelegramBot(
         TelegramConfiguration telegramConfiguration,
-        IExecutor executor)
+        IExecutor executor,
+        ILogger<TelegramBot> logger
+        )
     {
         _telegramConfiguration = telegramConfiguration;
         _client = new TelegramBotClient(telegramConfiguration.Token);
         _executor = executor;
+        _logger = logger;
     }
 
     public async Task StartMessageRecevingAsync()
     {
+        _logger.LogDebug("WoW Debug");
+        _logger.LogInformation("WoW Info");
+
         using var cts = new CancellationTokenSource();
 
         // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.

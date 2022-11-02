@@ -20,9 +20,10 @@ var host = Host.CreateDefaultBuilder(args)
 {
     ConfigureCustomServices(services, context.Configuration);
 })
-.ConfigureLogging((_, logging) =>
+.ConfigureLogging((context, logging) =>
 {
     logging.ClearProviders();
+    logging.AddConfiguration(context.Configuration.GetSection("Logging"));
     logging.AddSimpleConsole(options => options.IncludeScopes = true);
 })
 .Build();
