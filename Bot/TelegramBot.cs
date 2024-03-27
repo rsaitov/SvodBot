@@ -32,11 +32,8 @@ public class TelegramBot : IBot
         _logger = logger;
     }
 
-    public async Task StartMessageRecevingAsync()
+    public async Task StartMessageReceivingAsync()
     {
-        _logger.LogDebug("WoW Debug");
-        _logger.LogInformation("WoW Info");
-
         using var cts = new CancellationTokenSource();
 
         // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.

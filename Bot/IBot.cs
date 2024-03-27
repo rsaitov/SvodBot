@@ -2,5 +2,5 @@ namespace SvodBot.Bot;
 
 public interface IBot
 {
-    Task StartMessageRecevingAsync();
+    Task StartMessageReceivingAsync();
 }

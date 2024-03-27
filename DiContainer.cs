@@ -16,6 +16,6 @@ public class DiContainer
 
     public async Task ExecuteAsync()
     {
-        await _bot.StartMessageRecevingAsync();
+        await _bot.StartMessageReceivingAsync();
     }
 }
